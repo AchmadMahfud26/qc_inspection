@@ -4,13 +4,11 @@
 
 declare(strict_types=1);
 
-// Basic settings - adjust if your XAMPP MySQL uses a password
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'qc_inspection');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+require_once __DIR__ . '/config.php';
 
-define('DB_CHARSET', 'utf8mb4');
+if (!defined('DB_CHARSET')) {
+    define('DB_CHARSET', 'utf8mb4');
+}
 
 // Create PDO instance and expose via getPDO()
 function getPDO(): PDO

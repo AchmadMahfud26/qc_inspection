@@ -27,7 +27,10 @@ $user = current_user();
 
         <li class="nav-item mt-3"><strong class="text-muted ps-2">Data & Analysis</strong></li>
         <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/data_inspection.php"><i class="fa fa-table"></i> <span class="nav-label ms-2">Data Inspection</span></a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/analysis/defect.php"><i class="fa fa-chart-bar"></i> <span class="nav-label ms-2">Analysis</span></a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/analysis/defect_analysis.php"><i class="fa fa-bug"></i> <span class="nav-label ms-2">Analisa Defect</span></a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/analysis/product_analysis.php"><i class="fa fa-boxes"></i> <span class="nav-label ms-2">Analisa Produk</span></a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/analysis/process_analysis.php"><i class="fa fa-cog"></i> <span class="nav-label ms-2">Analisa Proses</span></a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/analysis/pareto.php"><i class="fa fa-chart-line"></i> <span class="nav-label ms-2">Pareto Defect</span></a></li>
 
         <li class="nav-item mt-3"><strong class="text-muted ps-2">Lainnya</strong></li>
         <li class="nav-item"><a class="nav-link text-white" href="/qc_inspection/reports/index.php"><i class="fa fa-file-alt"></i> <span class="nav-label ms-2">Report</span></a></li>

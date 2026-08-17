@@ -9,13 +9,16 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $user = current_user();
+$document_title = !empty($page_title)
+    ? $page_title . ' - QC INSPECTION'
+    : 'QC INSPECTION - Quality Control Inspection & Traceability System';
 ?>
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>QC INSPECTION - Quality Control Inspection & Traceability System</title>
+    <title><?php echo esc($document_title); ?></title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -23,6 +26,9 @@ $user = current_user();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- App styles -->
     <link href="/qc_inspection/assets/css/style.css" rel="stylesheet">
+    <?php if (!empty($extra_head_content)): ?>
+<?php echo $extra_head_content; ?>
+    <?php endif; ?>
 
 </head>
 <body>
