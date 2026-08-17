@@ -148,7 +148,7 @@ foreach ($pareto_rows as $r) {
                 <div class="card pareto-card card-pareto">
                     <div class="card-body">
                         <h6>Defect Pareto</h6>
-                        <canvas id="paretoChart" height="80"></canvas>
+                        <c anvas id="paretoChart" height="80"></canvas>
                     </div>
                 </div>
             </div>

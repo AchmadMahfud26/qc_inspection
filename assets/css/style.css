@@ -452,7 +452,7 @@ html {
 }
 
 .card-trend {
-  --card-height: 500px;
+  --card-height: 520px;
 }
 .card-trend .card-body {
   padding: 16px;
@@ -503,3 +503,172 @@ html {
 }
 
 /* End of standard container & components */
+
+/* ===== INSPECTION CHECKLIST TABLE STYLES ===== */
+/* Responsive table wrapper with horizontal scroll */
+.inspection-checklist-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Inspection checklist table - set minimum widths per column to prevent content cutoff */
+table#checklistTable {
+  min-width: 1500px !important;
+  margin-bottom: 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Checklist table header and cells - define proportional widths */
+#checklistTable thead th {
+  background: #f8f9fa;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 10px 8px;
+  font-size: 0.9rem;
+}
+
+#checklistTable tbody td {
+  padding: 8px 6px;
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Column-specific widths for checklist table - using explicit pixel values */
+#checklistTable th:nth-child(1),
+#checklistTable td:nth-child(1) {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+}
+
+#checklistTable th:nth-child(2),
+#checklistTable td:nth-child(2) {
+  width: 150px;
+  min-width: 150px;
+}
+
+#checklistTable th:nth-child(3),
+#checklistTable td:nth-child(3) {
+  width: 140px;
+  min-width: 140px;
+}
+
+#checklistTable th:nth-child(4),
+#checklistTable td:nth-child(4) {
+  width: 110px;
+  min-width: 110px;
+}
+
+#checklistTable th:nth-child(5),
+#checklistTable td:nth-child(5) {
+  width: 90px;
+  min-width: 90px;
+}
+
+#checklistTable th:nth-child(6),
+#checklistTable td:nth-child(6) {
+  width: 130px;
+  min-width: 130px;
+}
+
+#checklistTable th:nth-child(7),
+#checklistTable td:nth-child(7) {
+  width: 110px;
+  min-width: 110px;
+}
+
+#checklistTable th:nth-child(8),
+#checklistTable td:nth-child(8) {
+  width: 160px;
+  min-width: 160px;
+}
+
+#checklistTable th:nth-child(9),
+#checklistTable td:nth-child(9) {
+  width: 150px;
+  min-width: 150px;
+}
+
+/* Form controls inside table cells - optimize for space */
+#checklistTable .form-control,
+#checklistTable .form-control-sm,
+#checklistTable select,
+#checklistTable input {
+  width: 100%;
+  padding: 6px 4px;
+  font-size: 0.875rem;
+  border: 1px solid #dee2e6;
+  border-radius: 3px;
+}
+
+/* File input button styling in table */
+#checklistTable .btn-sm,
+#checklistTable input[type="file"] {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+}
+
+/* Badge/result styling */
+#checklistTable .result-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Hover effect on rows */
+#checklistTable tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Striped rows */
+#checklistTable tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+#checklistTable tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Responsive adjustments for checklist table on small screens */
+@media (max-width: 1199px) {
+  #checklistTable {
+    min-width: 1000px;
+    font-size: 0.875rem;
+  }
+  
+  #checklistTable thead th,
+  #checklistTable td {
+    padding: 6px 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .inspection-checklist-wrapper {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+  }
+  
+  #checklistTable {
+    min-width: 900px;
+    font-size: 0.8rem;
+  }
+  
+  #checklistTable thead th,
+  #checklistTable td {
+    padding: 5px 3px;
+  }
+  
+  #checklistTable .form-control,
+  #checklistTable select {
+    font-size: 0.75rem;
+  }
+}
+/* ===== END INSPECTION CHECKLIST TABLE STYLES ===== */
