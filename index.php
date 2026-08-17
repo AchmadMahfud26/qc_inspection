@@ -9,6 +9,7 @@ $pdo = getPDO();
 // Period filter
 $today = date('Y-m-d');
 $start_month = date('Y-m-01');
+$end_month = date('Y-m-t');
 $period = isset($_GET['period']) ? (string) $_GET['period'] : 'month';
 $allowed_periods = ['today', 'week', 'month', 'custom'];
 if (!in_array($period, $allowed_periods, true)) {
@@ -31,7 +32,7 @@ switch ($period) {
         break;
     case 'week':
         $range_start = date('Y-m-d', strtotime('monday this week'));
-        $range_end = $today;
+        $range_end = date('Y-m-d', strtotime('sunday this week'));
         $period_label = 'Minggu Ini';
         break;
     case 'custom':
@@ -47,7 +48,7 @@ switch ($period) {
     case 'month':
     default:
         $range_start = $start_month;
-        $range_end = $today;
+        $range_end = $end_month;
         $period_label = 'Bulan Ini';
         break;
 }
@@ -55,6 +56,24 @@ switch ($period) {
 $range_text = $range_start === $range_end
     ? date('d M Y', strtotime($range_start))
     : date('d M Y', strtotime($range_start)) . ' - ' . date('d M Y', strtotime($range_end));
+
+$trend_line_color = 'rgba(54, 162, 235, 1)';
+$trend_fill_color = 'rgba(54, 162, 235, 0.18)';
+
+switch ($period) {
+    case 'today':
+        $trend_line_color = 'rgba(13, 110, 253, 1)';
+        $trend_fill_color = 'rgba(13, 110, 253, 0.15)';
+        break;
+    case 'week':
+        $trend_line_color = 'rgba(25, 135, 84, 1)';
+        $trend_fill_color = 'rgba(25, 135, 84, 0.16)';
+        break;
+    case 'custom':
+        $trend_line_color = 'rgba(111, 66, 193, 1)';
+        $trend_fill_color = 'rgba(111, 66, 193, 0.16)';
+        break;
+}
 
 // Totals
 $total_range_stmt = $pdo->prepare('SELECT COUNT(*) FROM inspection_headers WHERE inspection_date BETWEEN :start AND :end');
@@ -92,21 +111,53 @@ $ok_rate = ($total_range > 0 && ($total_ok + $total_ng + $total_hold) > 0) ? rou
 $ng_rate = ($total_range > 0 && ($total_ok + $total_ng + $total_hold) > 0) ? round(($total_ng / max(1, ($total_ok + $total_ng + $total_hold))) * 100, 2) : 0;
 
 // Inspection trend by selected period
-$days = [];
-$counts = [];
-$start_date = $range_start;
-$end_date = $range_end;
-$stmt = $pdo->prepare('SELECT inspection_date, COUNT(*) AS cnt FROM inspection_headers WHERE inspection_date BETWEEN :start AND :end GROUP BY inspection_date ORDER BY inspection_date');
-$stmt->execute([':start' => $start_date, ':end' => $end_date]);
-$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-$map = [];
-foreach ($rows as $r) {
-    $map[$r['inspection_date']] = (int)$r['cnt'];
-}
-for ($cursor = strtotime($start_date); $cursor <= strtotime($end_date); $cursor = strtotime('+1 day', $cursor)) {
-    $d = date('Y-m-d', $cursor);
-    $days[] = $d;
-    $counts[] = $map[$d] ?? 0;
+$trend_labels = [];
+$trend_counts = [];
+$trend_chart_title = 'Inspection Trend ' . $period_label;
+$trend_dataset_label = 'Jumlah Inspection';
+
+if ($period === 'today') {
+    $stmt = $pdo->prepare("
+        SELECT
+            LPAD(HOUR(COALESCE(inspection_time, '00:00:00')), 2, '0') AS hour_key,
+            COUNT(*) AS cnt
+        FROM inspection_headers
+        WHERE inspection_date = :date
+        GROUP BY HOUR(COALESCE(inspection_time, '00:00:00'))
+        ORDER BY hour_key
+    ");
+    $stmt->execute([':date' => $range_start]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $map = [];
+    foreach ($rows as $r) {
+        $map[$r['hour_key']] = (int)$r['cnt'];
+    }
+    for ($hour = 0; $hour < 24; $hour++) {
+        $hour_key = str_pad((string)$hour, 2, '0', STR_PAD_LEFT);
+        $trend_labels[] = $hour_key . ':00';
+        $trend_counts[] = $map[$hour_key] ?? 0;
+    }
+    $trend_chart_title = 'Inspection Trend per Jam ' . $period_label;
+    $trend_dataset_label = 'Jumlah Inspection per Jam';
+} else {
+    $stmt = $pdo->prepare('SELECT inspection_date, COUNT(*) AS cnt FROM inspection_headers WHERE inspection_date BETWEEN :start AND :end GROUP BY inspection_date ORDER BY inspection_date');
+    $stmt->execute([':start' => $range_start, ':end' => $range_end]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $map = [];
+    foreach ($rows as $r) {
+        $map[$r['inspection_date']] = (int)$r['cnt'];
+    }
+    for ($cursor = strtotime($range_start); $cursor <= strtotime($range_end); $cursor = strtotime('+1 day', $cursor)) {
+        $date_key = date('Y-m-d', $cursor);
+        if ($period === 'week') {
+            $trend_labels[] = date('D', $cursor);
+        } elseif ($period === 'month') {
+            $trend_labels[] = date('d', $cursor);
+        } else {
+            $trend_labels[] = date('d M', $cursor);
+        }
+        $trend_counts[] = $map[$date_key] ?? 0;
+    }
 }
 
 // Result distribution for selected period
@@ -167,6 +218,14 @@ foreach ($pareto_rows as $r) {
     $cumulative[] = round($sum, 2);
 }
 
+$top_defect_name = !empty($top_defects) ? (string)$top_defects[0]['defect_name'] : 'Tidak ada defect';
+$top_defect_count = !empty($top_defects) ? (int)$top_defects[0]['cnt'] : 0;
+$trend_peak = !empty($trend_counts) ? max($trend_counts) : 0;
+$trend_points_with_data = count(array_filter($trend_counts, static function ($value) {
+    return (int)$value > 0;
+}));
+$result_total = $total_ok + $total_ng + $total_hold;
+
 // pass data to view
 ?>
 <?php require_once __DIR__ . '/includes/header.php'; ?>
@@ -193,12 +252,12 @@ foreach ($pareto_rows as $r) {
                 <input type="date" class="form-control" id="end_date" name="end_date" value="<?php echo esc($range_end); ?>">
             </div>
             <div class="col-lg-3 col-md-6">
-                <div class="d-grid gap-2 dashboard-filter-actions">
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="dashboard-filter-actions">
+                    <button type="submit" class="btn btn-primary dashboard-filter-submit">
                         <i class="fas fa-filter"></i> Terapkan Filter
                     </button>
-                    <a href="/qc_inspection/index.php" class="btn btn-outline-secondary w-100">
-                        <i class="fas fa-rotate-left"></i> Reset Filter
+                    <a href="/qc_inspection/index.php" class="btn btn-outline-secondary dashboard-filter-reset" title="Reset Filter" aria-label="Reset Filter">
+                        <i class="fas fa-rotate-left"></i>
                     </a>
                 </div>
             </div>
@@ -265,7 +324,13 @@ foreach ($pareto_rows as $r) {
             <div class="grid-trend">
                 <div class="card card-trend">
                     <div class="card-body">
-                        <h6>Inspection Trend <?php echo esc($period_label); ?></h6>
+                        <div class="dashboard-card-header">
+                            <h6><?php echo esc($trend_chart_title); ?></h6>
+                            <div class="dashboard-mini-stats">
+                                <span class="mini-stat-chip mini-stat-chip-primary">Peak <?php echo esc((string)$trend_peak); ?></span>
+                                <span class="mini-stat-chip mini-stat-chip-neutral"><?php echo esc((string)$trend_points_with_data); ?> titik aktif</span>
+                            </div>
+                        </div>
                         <canvas id="trendChart" height="120"></canvas>
                     </div>
                 </div>
@@ -274,7 +339,13 @@ foreach ($pareto_rows as $r) {
             <div class="grid-pareto">
                 <div class="card pareto-card card-pareto">
                     <div class="card-body">
-                        <h6>Defect Pareto <?php echo esc($period_label); ?></h6>
+                        <div class="dashboard-card-header">
+                            <h6>Defect Pareto <?php echo esc($period_label); ?></h6>
+                            <div class="dashboard-mini-stats">
+                                <span class="mini-stat-chip mini-stat-chip-danger"><?php echo esc((string)$pareto_total); ?> defect</span>
+                                <span class="mini-stat-chip mini-stat-chip-info"><?php echo esc((string)count($pareto_labels)); ?> kategori</span>
+                            </div>
+                        </div>
                         <canvas id="paretoChart" height="80"></canvas>
                     </div>
                 </div>
@@ -283,14 +354,27 @@ foreach ($pareto_rows as $r) {
             <div class="grid-right">
                 <div class="card mb-3 card-okng">
                     <div class="card-body">
-                        <h6>Distribusi Hasil <?php echo esc($period_label); ?></h6>
+                        <div class="dashboard-card-header">
+                            <h6>Distribusi Hasil <?php echo esc($period_label); ?></h6>
+                            <div class="dashboard-mini-stats">
+                                <span class="mini-stat-chip mini-stat-chip-success">PASS <?php echo esc((string)$total_ok); ?></span>
+                                <span class="mini-stat-chip mini-stat-chip-danger">NG <?php echo esc((string)$total_ng); ?></span>
+                                <span class="mini-stat-chip mini-stat-chip-warning">HOLD <?php echo esc((string)$total_hold); ?></span>
+                            </div>
+                        </div>
                         <canvas id="okngChart" height="140"></canvas>
                     </div>
                 </div>
 
                 <div class="card card-topdefect">
                     <div class="card-body">
-                        <h6>Top Defect <?php echo esc($period_label); ?></h6>
+                        <div class="dashboard-card-header">
+                            <h6>Top Defect <?php echo esc($period_label); ?></h6>
+                            <div class="dashboard-mini-stats">
+                                <span class="mini-stat-chip mini-stat-chip-danger"><?php echo esc($top_defect_name); ?></span>
+                                <span class="mini-stat-chip mini-stat-chip-neutral"><?php echo esc((string)$top_defect_count); ?> kasus</span>
+                            </div>
+                        </div>
                         <ul class="list-group list-group-flush">
                             <?php if (empty($top_defects)): ?>
                                 <li class="list-group-item">Tidak ada defect tercatat.</li>
@@ -308,11 +392,31 @@ foreach ($pareto_rows as $r) {
 
                 <div class="card card-summary">
                     <div class="card-body">
-                        <h6>Ringkasan</h6>
-                        <p>Total Produk Aktif: <strong><?php echo esc((string)$total_products); ?></strong></p>
-                        <p>Periode Aktif: <strong><?php echo esc($range_text); ?></strong></p>
-                        <p>Total HOLD <?php echo esc($period_label); ?>: <strong><?php echo esc((string)$total_hold); ?></strong></p>
-                        <p>NG Rate <?php echo esc($period_label); ?>: <strong><?php echo esc($ng_rate . '%'); ?></strong></p>
+                        <div class="dashboard-card-header">
+                            <h6>Ringkasan</h6>
+                            <div class="dashboard-mini-stats">
+                                <span class="mini-stat-chip mini-stat-chip-primary"><?php echo esc((string)$total_products); ?> produk</span>
+                                <span class="mini-stat-chip mini-stat-chip-info"><?php echo esc((string)$result_total); ?> hasil</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-summary-list">
+                            <div class="dashboard-summary-item">
+                                <span class="summary-label">Total Produk Aktif</span>
+                                <strong><?php echo esc((string)$total_products); ?></strong>
+                            </div>
+                            <div class="dashboard-summary-item">
+                                <span class="summary-label">Periode Aktif</span>
+                                <strong><?php echo esc($range_text); ?></strong>
+                            </div>
+                            <div class="dashboard-summary-item">
+                                <span class="summary-label">Total HOLD <?php echo esc($period_label); ?></span>
+                                <strong><?php echo esc((string)$total_hold); ?></strong>
+                            </div>
+                            <div class="dashboard-summary-item">
+                                <span class="summary-label">NG Rate <?php echo esc($period_label); ?></span>
+                                <strong><?php echo esc($ng_rate . '%'); ?></strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -324,12 +428,16 @@ foreach ($pareto_rows as $r) {
 <!-- Charts scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const trendLabels = <?php echo json_encode($days); ?>;
-const trendData = <?php echo json_encode($counts); ?>;
+const trendLabels = <?php echo json_encode($trend_labels); ?>;
+const trendData = <?php echo json_encode($trend_counts); ?>;
 const okngData = <?php echo json_encode([$okng_map['PASS'], $okng_map['NG'], $okng_map['HOLD']]); ?>;
 const paretoLabels = <?php echo json_encode($pareto_labels); ?>;
 const paretoCounts = <?php echo json_encode($pareto_counts); ?>;
 const paretoCumulative = <?php echo json_encode($cumulative); ?>;
+const trendLineColor = <?php echo json_encode($trend_line_color); ?>;
+const trendFillColor = <?php echo json_encode($trend_fill_color); ?>;
+const activePeriodLabel = <?php echo json_encode($period_label); ?>;
+const activeRangeText = <?php echo json_encode($range_text); ?>;
 
 // Toggle custom date inputs
 const periodSelect = document.getElementById('period');
@@ -354,17 +462,55 @@ if (trendCanvas) {
         data: {
             labels: trendLabels,
             datasets: [{
-                label: 'Jumlah Inspection',
+                label: <?php echo json_encode($trend_dataset_label); ?>,
                 data: trendData,
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: trendLineColor,
+                backgroundColor: trendFillColor,
+                borderWidth: 3,
                 tension: 0.3,
-                fill: true
+                fill: true,
+                pointRadius: trendData.length === 1 ? 5 : 3,
+                pointHoverRadius: 6,
+                pointBackgroundColor: trendLineColor
             }]
         },
         options: {
-            scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } },
-            responsive: true
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(items) {
+                            return items.length ? items[0].label : '';
+                        },
+                        label: function(context) {
+                            return ' Inspection: ' + context.parsed.y;
+                        },
+                        afterBody: function() {
+                            return 'Periode: ' + activeRangeText;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1
+                    }
+                }
+            }
         }
     });
 }
@@ -379,10 +525,35 @@ if (okngCanvas) {
             labels: ['PASS','NG','HOLD'],
             datasets: [{
                 data: okngData,
-                backgroundColor: ['#28a745','#dc3545','#ffc107']
+                backgroundColor: ['#28a745','#dc3545','#ffc107'],
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 10
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true,
+            cutout: '62%',
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce(function(sum, value) { return sum + value; }, 0);
+                            const value = context.parsed || 0;
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : '0.00';
+                            return ' ' + context.label + ': ' + value + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
     });
 }
 
@@ -398,7 +569,9 @@ if (paretoCanvas) {
                     type: 'bar',
                     label: 'Jumlah',
                     data: paretoCounts,
-                    backgroundColor: 'rgba(255,99,132,0.6)'
+                    backgroundColor: 'rgba(255,99,132,0.6)',
+                    borderRadius: 6,
+                    borderSkipped: false
                 },
                 {
                     type: 'line',
@@ -407,14 +580,51 @@ if (paretoCanvas) {
                     yAxisID: 'percentAxis',
                     borderColor: 'rgba(54,162,235,1)',
                     backgroundColor: 'rgba(54,162,235,0.2)',
+                    borderWidth: 3,
                     tension: 0.3,
-                    fill: false
+                    fill: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
         options: {
             responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.label === 'Kumulatif %') {
+                                return ' Kumulatif: ' + context.parsed.y + '%';
+                            }
+                            return ' Jumlah defect: ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
             scales: {
+                x: {
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 8
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1
+                    }
+                },
                 percentAxis: {
                     type: 'linear',
                     position: 'right',
