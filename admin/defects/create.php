@@ -1,0 +1,34 @@
+<?php
+// admin/defects/create.php
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/functions.php';
+require_login(); if (!has_role('admin')) { http_response_code(403); echo 'Akses ditolak.'; exit; }
+$pdo = getPDO(); $errors = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+    $token = $_POST['csrf_token'] ?? ''; if (!csrf_verify($token)) { $errors[]='CSRF tidak valid.'; }
+    $defect_code = trim($_POST['defect_code'] ?? ''); $defect_name = trim($_POST['defect_name'] ?? ''); $category = trim($_POST['category'] ?? '');
+    $process = trim($_POST['process'] ?? ''); $severity = $_POST['severity'] ?? 'medium'; $description = trim($_POST['description'] ?? ''); $status = $_POST['status'] ?? 'active';
+    if ($defect_code===''||$defect_name==='') $errors[]='Defect code dan nama wajib diisi.';
+    if (empty($errors)){
+        $stmt = $pdo->prepare('INSERT INTO defects (defect_code, defect_name, category, process, severity, description, status) VALUES (:code,:name,:cat,:proc,:sev,:desc,:status)');
+        $stmt->execute([':code'=>$defect_code,':name'=>$defect_name,':cat'=>$category,':proc'=>$process,':sev'=>$severity,':desc'=>$description,':status'=>$status]);
+        set_flash('success','Defect ditambahkan'); log_activity($pdo, current_user()['id'], 'Create Defect '.$defect_code, 'Defect', (string)$pdo->lastInsertId());
+        header('Location: index.php'); exit;
+    }
+}
+?>
+<?php require_once __DIR__ . '/../../includes/header.php'; ?>
+<h4>Tambah Defect</h4>
+<?php if (!empty($errors)): ?><div class="alert alert-danger"><ul><?php foreach($errors as $e) echo '<li>'.esc($e).'</li>'; ?></ul></div><?php endif; ?>
+<form method="post" action="">
+    <input type="hidden" name="csrf_token" value="<?php echo esc(csrf_token()); ?>">
+    <div class="mb-3"><label class="form-label">Defect Code</label><input type="text" name="defect_code" class="form-control" value="<?php echo esc($_POST['defect_code'] ?? ''); ?>" required></div>
+    <div class="mb-3"><label class="form-label">Defect Name</label><input type="text" name="defect_name" class="form-control" value="<?php echo esc($_POST['defect_name'] ?? ''); ?>" required></div>
+    <div class="mb-3"><label class="form-label">Category</label><input type="text" name="category" class="form-control" value="<?php echo esc($_POST['category'] ?? ''); ?>"></div>
+    <div class="mb-3"><label class="form-label">Process</label><input type="text" name="process" class="form-control" value="<?php echo esc($_POST['process'] ?? ''); ?>"></div>
+    <div class="mb-3"><label class="form-label">Severity</label><select name="severity" class="form-select"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></div>
+    <div class="mb-3"><label class="form-label">Description</label><textarea name="description" class="form-control"><?php echo esc($_POST['description'] ?? ''); ?></textarea></div>
+    <div class="mb-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+    <div class="d-flex justify-content-end"><a href="index.php" class="btn btn-secondary me-2">Batal</a><button class="btn btn-primary" type="submit">Simpan</button></div>
+</form>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

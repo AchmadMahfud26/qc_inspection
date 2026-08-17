@@ -1,0 +1,505 @@
+/* assets/css/style.css - central styles for QC INSPECTION */
+
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 70px;
+  --navbar-height: 56px;
+}
+
+/* Reset and base */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #f5f7fa;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    "Helvetica Neue",
+    Arial;
+  /* make page a column so footer can be pushed to bottom when content short */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Container layout */
+.container-fluid.content-wrapper {
+  padding: 8px 14px;
+  margin-top: 0;
+}
+
+/* Sidebar */
+.sidebar-container {
+  width: var(--sidebar-width);
+  position: fixed; /* fixed overlay to avoid shifting main content */
+  left: 0;
+  top: var(--navbar-height);
+  max-height: calc(100vh - var(--navbar-height));
+  overflow-y: auto;
+  padding-right: 10px;
+  background: transparent; /* dark bg handled by .bg-dark */
+  transform: translateX(0);
+  transition:
+    transform 0.25s ease,
+    width 0.25s ease;
+  z-index: 1040;
+}
+.sidebar-container .nav-link {
+  border-radius: 6px;
+  padding: 10px;
+  color: rgba(255, 255, 255, 0.95);
+}
+.sidebar-container .nav-link i {
+  width: 18px;
+  text-align: center;
+}
+.sidebar-container .nav-label {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Collapsed sidebar state on body */
+.sidebar-collapsed .sidebar-container {
+  transform: translateX(-100%); /* hide when collapsed */
+}
+.sidebar-collapsed .nav-label {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Main content */
+.main-content {
+  transition:
+    padding-left 0.2s ease,
+    transform 0.2s ease;
+  padding-top: 6px;
+  margin-top: 0 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+@media (min-width: 768px) {
+  /* For desktop: when sidebar is visible, add left padding so content not covered; when collapsed remove padding */
+  body:not(.sidebar-collapsed) .main-content {
+    padding-left: var(--sidebar-width);
+  }
+  .sidebar-collapsed .main-content {
+    padding-left: 0;
+  }
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+/* Ensure main content does not overlap navbar */
+.main-content {
+  transform: none !important;
+}
+@media (max-width: 767.98px) {
+  .main-content {
+    transform: none !important;
+  }
+}
+/* Reset possible Bootstrap utility margins that cause gaps */
+.container-fluid.content-wrapper {
+  padding-top: 0 !important;
+}
+.row.mt-3,
+.row.mt-4,
+.row.mt-2 {
+  margin-top: 0 !important;
+}
+.h-100 {
+  min-height: unset !important;
+}
+
+/* Ensure content fills viewport and starts at top */
+.main-content > * {
+  margin-top: 0;
+}
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4,
+.main-content h5,
+.main-content h6 {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.main-content .row,
+.main-content .card {
+  margin-top: 0;
+}
+
+/* Force rows align top to avoid vertical centering */
+.row {
+  align-items: flex-start;
+}
+
+/* Mobile off-canvas */
+.sidebar-container {
+  left: 0;
+}
+@media (max-width: 767.98px) {
+  .sidebar-container {
+    position: fixed;
+    left: -300px;
+    top: var(--navbar-height);
+    width: 240px;
+    z-index: 1040;
+  }
+  .sidebar-container.show-mobile {
+    left: 0;
+  }
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Small UI tweaks */
+.navbar {
+  margin-bottom: 0;
+  position: fixed; /* keep navbar fixed on top */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100; /* ensure navbar is above other fixed elements */
+}
+
+/* Ensure page content starts below fixed navbar (increased to avoid overlap) */
+.content-wrapper {
+  padding-top: calc(
+    var(--navbar-height) + 40px
+  ); /* increased space so main content fully visible */
+}
+
+/* Ensure main-content itself also has a top padding to separate from navbar */
+.main-content {
+  padding-top: 70px; /* inner spacing increased */
+}
+
+/* Utility: ensure no big gap from cards */
+.card {
+  margin-bottom: 12px;
+}
+
+/* Improve scrollbar look (optional) */
+.sidebar-container::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Header & utility styles moved from includes/header.php */
+.navbar-brand {
+  font-weight: 700;
+}
+/* Final content-wrapper: increased top spacing so main content not hidden by fixed navbar */
+.content-wrapper {
+  padding-top: 490px; /* lowered further by additional 50px as requested */
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-top: 0;
+  flex: 1 0 auto; /* allow content to grow and push footer down */
+}
+
+/* Ensure footer stays at bottom */
+footer {
+  flex-shrink: 0;
+}
+
+/* Footer inner alignment: keep text centered and width aligned with main content */
+.footer-inner {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  margin: 0 auto;
+  text-align: center; /* center text */
+}
+
+/* When sidebar is visible on desktop, offset footer inner so it doesn't sit under sidebar */
+@media (min-width: 768px) {
+  body:not(.sidebar-collapsed) .footer-inner {
+    margin-left: var(--sidebar-width);
+    max-width: calc(100% - var(--sidebar-width));
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .sidebar-collapsed .footer-inner {
+    margin-left: 0;
+    max-width: 100%;
+  }
+}
+
+/* smaller screens: footer full width centered */
+@media (max-width: 767.98px) {
+  .footer-inner {
+    margin-left: 0;
+    max-width: 100%;
+  }
+}
+
+/* Auth page wrapper moved from includes/header_simple.php */
+body,
+html {
+  height: 100%;
+}
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile sidebar positioning (ensure consistent behavior) */
+@media (max-width: 767.98px) {
+  .sidebar-container {
+    position: fixed;
+    z-index: 1040;
+    left: -260px;
+    top: 56px;
+  }
+  .sidebar-container.show-mobile {
+    left: 0;
+  }
+}
+
+/* --------------------------------------------------
+   Standard container & component styles (global)
+   -------------------------------------------------- */
+
+/* Page containers */
+.container {
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.container-fluid {
+  width: 100%;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Reusable inner wrapper that aligns with main content width */
+.content-inner {
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Section / page heading */
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2d3d;
+  margin-bottom: 12px;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+/* Cards */
+.card {
+  border-radius: 8px;
+  border: 1px solid rgba(16, 24, 32, 0.06);
+  box-shadow: 0 1px 1px rgba(16, 24, 32, 0.04);
+  background: #ffffff;
+}
+.card .card-body {
+  padding: 16px;
+}
+.card .card-footer {
+  padding: 12px 16px;
+  background: transparent;
+  border-top: 1px solid rgba(16, 24, 32, 0.04);
+}
+
+/* Forms */
+.form-control {
+  border-radius: 6px;
+  box-shadow: none !important;
+  border: 1px solid #dfe4ea;
+  padding: 8px 10px;
+}
+.form-control:focus {
+  outline: none;
+  box-shadow: none !important;
+  border-color: #6c757d;
+}
+.form-label {
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 6px;
+}
+.btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Tables */
+.table {
+  background: #fff;
+}
+.table thead th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+.table tbody tr td {
+  vertical-align: middle;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Utilities */
+.text-muted-2 {
+  color: #6c757d;
+}
+.center {
+  text-align: center;
+}
+
+/* Small screens adjustments for containers */
+@media (max-width: 767.98px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .content-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Dashboard grid layout: Trend on top row, Pareto below trend, Right column holds OK/NG, Top Defect and Summary */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas: "trend right" "pareto right";
+  gap: 16px;
+  align-items: start;
+}
+.grid-trend {
+  grid-area: trend;
+}
+.grid-pareto {
+  grid-area: pareto;
+}
+.grid-right {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ensure pareto sits below trend but aligns with top of right column content */
+.card-pareto {
+  margin: 0;
+}
+
+/* End dashboard grid */
+
+/* Card sizing helpers for dashboard */
+.card {
+  --card-width: 100%;
+  --card-height: 200px;
+  width: var(--card-width);
+  min-height: var(--card-height);
+}
+
+.card-stats {
+  --card-height: 110px;
+  display: flex;
+  align-items: center;
+}
+.card-stats .card-body {
+  padding: 12px;
+}
+.card-stats .card-body h6 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+.card-stats .card-body h3 {
+  margin: 6px 0 0;
+  font-size: 1.6rem;
+}
+
+.card-trend {
+  --card-height: 500px;
+}
+.card-trend .card-body {
+  padding: 16px;
+}
+
+.card-okng {
+  --card-height: 220px;
+}
+.card-topdefect {
+  --card-height: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.card-topdefect .list-group-item {
+  border: none;
+}
+
+.card-pareto {
+  --card-height: 240px;
+}
+.card-summary {
+  --card-height: 240px;
+}
+
+/* Easy size override examples
+   Set custom height/width on a specific card instance using inline style or extra class:
+   .card-custom { --card-width: 540px; --card-height: 260px; }
+*/
+.card-custom {
+  --card-width: 100%;
+  --card-height: 220px;
+}
+
+/* Responsive tweaks: reduce heights on small screens */
+@media (max-width: 767.98px) {
+  .card-trend {
+    --card-height: 220px;
+  }
+  .card-okng,
+  .card-topdefect,
+  .card-pareto,
+  .card-summary {
+    --card-height: 160px;
+  }
+  .card-stats {
+    --card-height: 90px;
+  }
+}
+
+/* End of standard container & components */
