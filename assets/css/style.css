@@ -665,27 +665,51 @@ html {
 }
 
 .card-stats-today {
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(13, 110, 253, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(13, 110, 253, 0.08),
+    rgba(13, 110, 253, 0.02)
+  );
 }
 
 .card-stats-month {
-  background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(13, 202, 240, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(13, 202, 240, 0.1),
+    rgba(13, 202, 240, 0.02)
+  );
 }
 
 .card-stats-ok {
-  background: linear-gradient(135deg, rgba(25, 135, 84, 0.1), rgba(25, 135, 84, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(25, 135, 84, 0.1),
+    rgba(25, 135, 84, 0.02)
+  );
 }
 
 .card-stats-ng {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.1),
+    rgba(220, 53, 69, 0.02)
+  );
 }
 
 .card-stats-hold {
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.14), rgba(255, 193, 7, 0.03));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.14),
+    rgba(255, 193, 7, 0.03)
+  );
 }
 
 .card-stats-rate {
-  background: linear-gradient(135deg, rgba(111, 66, 193, 0.1), rgba(111, 66, 193, 0.02));
+  background: linear-gradient(
+    135deg,
+    rgba(111, 66, 193, 0.1),
+    rgba(111, 66, 193, 0.02)
+  );
 }
 
 /* Easy size override examples
@@ -864,7 +888,7 @@ table#checklistTable {
     min-width: 1000px;
     font-size: 0.875rem;
   }
-  
+
   #checklistTable thead th,
   #checklistTable td {
     padding: 6px 4px;
@@ -879,17 +903,17 @@ table#checklistTable {
     margin-right: -12px;
     width: calc(100% + 24px);
   }
-  
+
   #checklistTable {
     min-width: 900px;
     font-size: 0.8rem;
   }
-  
+
   #checklistTable thead th,
   #checklistTable td {
     padding: 5px 3px;
   }
-  
+
   #checklistTable .form-control,
   #checklistTable select {
     font-size: 0.75rem;
